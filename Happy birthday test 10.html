@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #7af7ff, #a953ff, #f669ff );
+    background-size: 400% 400%;
+    animation: gradient 12s ease infinite;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+  @keyframes gradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+ .form-box {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 40px 35px;
+    border-radius: 30px;
+    width: 90%;
+    max-width: 450px;
+    z-index: 10;
+    text-align: center;
+    transition: opacity 0.5s;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 15px;
+    font-size: 1em;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    outline: none;
+  }
+  input::placeholder { color: rgba(255,255,255,0.7); }
+
+  button {
+    margin-top: 15px;
+    padding: 15px 25px;
+    font-size: 1.1em;
+    font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(90deg, #ff4d6d, #ff8fa3);
+    color: white;
+    cursor: pointer;
+    width: 100%;
+  }
+
+ /* Scrolling Photo Container */
+ .photo-scroll {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+  }
+ .scrolling-photo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85vw;
+    max-width: 380px;
+    aspect-ratio: 3/4;
+    border-radius: 30px;
+    border: 5px solid rgba(255,255,255,0.4);
+    box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+    object-fit: cover;
+    animation: scrollUpPhoto 10s linear infinite;
+  }
+  @keyframes scrollUpPhoto {
+    0% { top: 100%; }
+    100% { top: -120%; }
+  }
+
+ /* Static Typewriter Wish - Center */
+ .wish {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Pacifico', cursive;
+    font-size: 3em;
+    background: linear-gradient(90deg, #fff, #ffd90c, #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    width: 90%;
+    z-index: 5;
+    text-shadow: 0 0 30px rgb(255,229,4);
+  }
+ .cursor {
+    display: inline-block;
+    width: 4px;
+    height: 1.2em;
+    background: #ffd700;
+    animation: blink 1s infinite;
+    vertical-align: bottom;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+ #video { position: absolute; opacity: 0; pointer-events: none; }
+
+ .balloon {
+    position: absolute;
+    bottom: -150px;
+    width: 60px;
+    height: 80px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    opacity: 0.7;
+    animation: floatUp 10s linear infinite;
+    z-index: 2;
+  }
+  @keyframes floatUp { 0%{transform:translateY(0)} 100%{transform:translateY(-120vh)} }
+ .hidden { display: none; opacity: 0; }
+
+ /* NEW: Countdown overlay on form */
+ .countdown-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8em;
+    font-weight: 700;
+    z-index: 999;
+    font-family: 'Pacifico', cursive;
+    color: #ffd700;
+    text-shadow: 0 0 30px #ff4d6d;
+  }
+</style>
+</head>
+<body>
+
+<!-- Step 1: Form -->
+<div class="form-box" id="formBox">
+  <h1 style="font-family: 'Pacifico', cursive; font-size: 2.5em; margin-bottom: 10px;">🎉 Let's Party!</h1>
+  <input type="text" id="nameInput" placeholder="Enter Name " required>
+  <input type="number" id="ageInput" placeholder="Enter Age " required>
+  <button onclick="startBirthday()">Start Celebration 📸</button>
+</div>
+
+<!-- Step 2: Celebration -->
+<div class="photo-scroll hidden" id="photoScroll"></div>
+<div class="wish hidden" id="wishText"></div><span class="cursor hidden" id="cursor"></span>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" class="hidden"></canvas>
+
+<!-- MUSIC -->
+<audio id="bgMusic" loop>
+  <source src="atlasaudio-birthday-491022.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  let stream;
+  let name, age;
+
+  async function startBirthday(){
+    name = document.getElementById('nameInput').value;
+    age = document.getElementById('ageInput').value;
+
+    if(name === "" || age === ""){
+      alert("Name and Age required bro!");
+      return;
+    }
+
+    // 1. Camera Access ගන්න + Countdown කරන්න. Form එක තාම තියෙනවා
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      document.getElementById('video').srcObject = stream;
+      countdownAndCapture(); // countdown ඉවර වෙලා photo ගත්තට පස්සේ celebrate පටන් ගන්නවා
+    } catch(err) {
+      alert("Camera access denied. Settings වලින් permission දෙන්න .");
+    }
+  }
+
+  function countdownAndCapture(){
+    let count = 3;
+    const overlay = document.createElement('div');
+    overlay.className = 'countdown-overlay';
+    document.body.appendChild(overlay);
+
+    const timer = setInterval(()=>{
+      overlay.innerText = count > 0 ? count : "📸";
+      if(count < 0){
+        clearInterval(timer);
+        takePhoto();
+        overlay.remove(); // countdown ඉවරයි
+        startCelebration(); // දැන් celebrate page එක load කරන්න
+      }
+      count--;
+    }, 1000);
+  }
+
+  function startCelebration(){
+    // Form hide කරලා celebration show කරන්න
+    document.getElementById('formBox').classList.add('hidden');
+    document.getElementById('photoScroll').classList.remove('hidden');
+    document.getElementById('bgMusic').play().catch(e=>{});
+
+    // Balloons
+    createBalloons();
+
+    // Typewriter Wish
+    const wishText = `Happy ${age} Birthday ${name}! 🎊\nYou are !`;
+    typeWriter(wishText, 0);
+  }
+
+  function takePhoto(){
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    const photoURL = canvas.toDataURL('image/png');
+    
+    // Create scrolling photo
+    const img = document.createElement('img');
+    img.src = photoURL;
+    img.className = 'scrolling-photo';
+    document.getElementById('photoScroll').appendChild(img);
+    
+    // Loop the photo scroll
+    setInterval(()=>{
+      const newImg = img.cloneNode();
+      document.getElementById('photoScroll').appendChild(newImg);
+      setTimeout(()=>newImg.remove(), 10000);
+    }, 5000);
+    
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  function typeWriter(text, i){
+    const wishEl = document.getElementById('wishText');
+    const cursor = document.getElementById('cursor');
+    wishEl.classList.remove('hidden');
+    cursor.classList.remove('hidden');
+    if(i < text.length){
+      wishEl.innerHTML += text.charAt(i) === '\n'? '<br>' : text.charAt(i);
+      setTimeout(()=>typeWriter(text, i+1), 80);
+    } else { cursor.classList.add('hidden'); }
+  }
+
+  function createBalloons(){
+    setInterval(()=>{
+      let b = document.createElement('div');
+      b.className = 'balloon';
+      b.style.left = Math.random()*100 + 'vw';
+      b.style.background = `hsl(${Math.random()*360}, 100%, 70%)`;
+      b.style.animationDuration = (8 + Math.random()*4) + 's';
+      document.body.appendChild(b);
+      setTimeout(()=>b.remove(), 11000);
+    }, 500);
+  }
+</script>
+
+</body>
+</html>
